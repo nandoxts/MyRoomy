@@ -1,0 +1,34 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_dashboard"
+        android:title="Dashboard"
+        android:icon="@drawable/ic_dashboard" />
+
+    <item
+        android:id="@+id/nav_gestion_habitaciones"
+        android:title="Gestionar habitaciones"
+        android:icon="@drawable/ic_room" />
+
+    <item
+        android:id="@+id/nav_gestion_reservas"
+        android:title="Gestionar reservas"
+        android:icon="@drawable/ic_calendar_manage" />
+
+    <item
+        android:id="@+id/nav_gestion_usuarios"
+        android:title="Gestionar usuarios"
+        android:icon="@drawable/ic_people" />
+
+    <item
+        android:id="@+id/nav_perfil"
+        android:title="Mi perfil"
+        android:icon="@drawable/ic_account" />
+    <item
+        android:id="@+id/nav_info_hotel"
+        android:title="Ubicacion"
+        android:icon="@drawable/ic_ubigeo" />
+    <item
+        android:id="@+id/nav_cerrar_sesion"
+        android:title="Cerrar sesión"
+        android:icon="@drawable/ic_logout" />
+</menu>

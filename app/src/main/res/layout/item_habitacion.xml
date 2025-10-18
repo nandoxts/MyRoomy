@@ -1,0 +1,74 @@
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="12dp"
+    android:background="@color/colorBackgroundCard"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingEnd="8dp"> <!-- Para dar aire al botón -->
+
+        <ImageView
+            android:id="@+id/imgHabitacion"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_launcher_background"
+            android:contentDescription="Imagen habitación"
+            android:background="@drawable/bg_image_rounded" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp">
+
+            <TextView
+                android:id="@+id/txtNombreHabitacion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Habitación Suite"
+                android:textStyle="bold"
+                android:textSize="16sp"
+            android:textColor="@color/colorTextoPrimario" />
+
+            <TextView
+                android:id="@+id/txtInfoHabitacion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Suite | Piso 2 | Disponible"
+                android:textSize="14sp"
+            android:textColor="@color/colorTextoSecundario"
+            android:layout_marginTop="2dp" />
+
+            <TextView
+                android:id="@+id/txtPrecioHabitacion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="S/ 120.00"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorPrecio"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnEliminarHabitacion"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="4dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Eliminar habitación"
+            android:src="@drawable/ic_delete"
+            app:tint="@color/colorDelete" />
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,154 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Título -->
+        <TextView
+            android:id="@+id/txtTituloFormularioUsuario"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Agregar usuario"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Fila: Imagen + Datos -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Imagen de perfil con botón -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_weight="0.45"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imgPreviewUsuario"
+                    android:layout_width="match_parent"
+                    android:layout_height="185dp"
+                    android:scaleType="centerCrop"
+                    android:background="#E0E0E0" />
+
+                <ImageButton
+                    android:id="@+id/btnSeleccionarImagenUsuario"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="6dp"
+                    android:background="@drawable/button_gradient"
+                    android:contentDescription="Seleccionar imagen de perfil"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_image"
+                    tools:ignore="TouchTargetSizeCheck" />
+            </FrameLayout>
+
+            <!-- Datos: Nombre, Correo, Clave, Tipo -->
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_weight="0.55"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Nombre"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:boxBackgroundMode="outline"
+                    android:layout_marginBottom="8dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtNombreUsuario"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:inputType="textPersonName"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Contraseña"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:boxBackgroundMode="outline"
+                    android:layout_marginBottom="8dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtClaveUsuario"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:inputType="textPassword"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Tipo de usuario"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:endIconMode="dropdown_menu"
+                    app:boxBackgroundMode="outline">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/spinnerTipoUsuario"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:inputType="none"
+                        android:paddingStart="16dp"
+                        android:paddingTop="12dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="12dp"
+                        android:textSize="16sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Correo electrónico"
+            android:layout_marginTop="12dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            app:boxBackgroundMode="outline"
+            android:layout_marginBottom="8dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtCorreoUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:inputType="textEmailAddress"/>
+        </com.google.android.material.textfield.TextInputLayout>
+        <!-- Botón Guardar -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnGuardarUsuario"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_gradient"
+            android:text="Guardar usuario"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:icon="@drawable/ic_save"
+            app:iconPadding="8dp"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="20dp" />
+
+    </LinearLayout>
+</ScrollView>

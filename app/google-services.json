@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "838633769248",
+    "project_id": "myroomy-464823",
+    "storage_bucket": "myroomy-464823.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838633769248:android:3545c294d1f399c1f96f45",
+        "android_client_info": {
+          "package_name": "com.example.myroomy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "838633769248-niknp7arf3nlr4is5cq672gkes1u2q0m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.myroomy",
+            "certificate_hash": "ef0bbda74469352392b188c5e8b221fbb0aa6e66"
+          }
+        },
+        {
+          "client_id": "838633769248-jrks5ijsbmkg1k7siil9gc3aaeq7u3vm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgazT5V8UYsedOA_leqMss5zevXkv96DY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "838633769248-jrks5ijsbmkg1k7siil9gc3aaeq7u3vm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

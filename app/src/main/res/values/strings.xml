@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">My Roomy</string>
+    <string name="navigation_drawer_open">Abrir menú de navegación</string>
+    <string name="navigation_drawer_close">Cerrar menú de navegación</string>
+    <string name="cerrar">Cerrar</string>
+
+
+    <string-array name="roles_array">
+        <item>cliente</item>
+        <item>admin</item>
+    </string-array>
+
+
+</resources>

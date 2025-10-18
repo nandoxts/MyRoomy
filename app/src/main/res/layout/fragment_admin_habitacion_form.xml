@@ -1,0 +1,259 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true"
+    android:scrollbars="none">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Título centrado -->
+        <TextView
+            android:id="@+id/txtTituloFormulario"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Agregar habitación"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Fila: Imagen + Datos -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Imagen con botón flotante -->
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_weight="0.45"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/previewImagen"
+                    android:layout_width="match_parent"
+                    android:layout_height="185dp"
+                    android:scaleType="centerCrop"
+                    android:background="#E0E0E0" />
+
+                <ImageButton
+                    android:id="@+id/btnSeleccionarImagen"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="6dp"
+                    android:background="@drawable/button_gradient"
+                    android:contentDescription="Seleccionar imagen"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_image"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+
+
+
+            </FrameLayout>
+
+            <!-- Datos: Nombre + ComboBoxes -->
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_weight="0.55"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp">
+
+                <!-- Nombre -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Nombre"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:boxBackgroundMode="outline"
+                    android:layout_marginBottom="8dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/inputNombre"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Categoría -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Categoría"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:endIconMode="dropdown_menu"
+                    app:boxBackgroundMode="outline"
+                    android:layout_marginBottom="8dp">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/spinnerCategoria"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:autofillHints=""
+                        android:gravity="center_vertical"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:paddingStart="16dp"
+                        android:paddingTop="12dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="12dp"
+                        android:textSize="16sp"
+                        tools:ignore="SpeakableTextPresentCheck" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Estado -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Estado"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    app:endIconMode="dropdown_menu"
+                    app:boxBackgroundMode="outline">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/spinnerEstado"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:autofillHints=""
+                        android:gravity="center_vertical"
+                        android:importantForAutofill="no"
+                        android:inputType="none"
+                        android:paddingStart="16dp"
+                        android:paddingTop="12dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="12dp"
+                        android:textSize="16sp"
+                        tools:ignore="SpeakableTextPresentCheck" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Descripción -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Descripción"
+            android:layout_marginTop="16dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            app:boxBackgroundMode="outline">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/inputDescripcion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minLines="1"
+                android:inputType="textMultiLine" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <!-- Piso y N° habitación en una fila -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:weightSum="2">
+
+            <!-- Piso -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Piso"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                app:boxBackgroundMode="outline"
+                android:layout_marginEnd="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/inputPiso"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Número de habitación -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="N° habitación"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                app:boxBackgroundMode="outline"
+                android:layout_marginStart="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/inputNumeroHabitacion"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <!-- Precio -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Precio por noche (S/.)"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            app:boxBackgroundMode="outline">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/inputPrecio"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Servicios -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Servicios"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupServicios"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:singleLine="false"
+            app:chipSpacingHorizontal="6dp"
+            app:chipSpacingVertical="2dp" />
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAgregarServicio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Agregar servicio"
+            app:icon="@drawable/ic_add"
+            app:backgroundTint="@color/colorPrecio"
+            app:iconGravity="textStart"
+            android:layout_marginTop="8dp" />
+
+
+        <!-- Botón Guardar -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnGuardarHabitacion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Guardar habitación"
+            android:textAllCaps="false"
+            android:background="@drawable/button_gradient"
+            android:textStyle="bold"
+            android:icon="@drawable/ic_save"
+            app:iconPadding="8dp"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="20dp" />
+    </LinearLayout>
+</ScrollView>

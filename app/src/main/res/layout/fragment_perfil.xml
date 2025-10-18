@@ -1,0 +1,65 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="24dp">
+
+    <!-- Foto de Perfil -->
+    <ImageView
+        android:id="@+id/imgFotoPerfil"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@drawable/ic_person_placeholder"
+        android:scaleType="centerCrop"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Nombre del usuario -->
+    <TextView
+        android:id="@+id/txtNombrePerfil"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nombre del usuario"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Correo del usuario -->
+    <TextView
+        android:id="@+id/txtCorreoPerfil"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Correo del usuario"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Tipo de usuario (Admin, Cliente, etc.) -->
+    <TextView
+        android:id="@+id/txtTipoPerfil"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tipo de usuario: Cliente"
+        android:textSize="16sp"
+        android:textColor="@android:color/darker_gray"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Estado del usuario (Activo, Inactivo) -->
+    <TextView
+        android:id="@+id/txtEstadoPerfil"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Estado: Activo"
+        android:textSize="16sp"
+        android:textColor="@android:color/holo_green_dark"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Botón para editar perfil -->
+    <Button
+        android:id="@+id/btnEditarPerfil"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Editar Perfil"
+        android:layout_marginTop="16dp"
+        android:visibility="gone" />
+
+</LinearLayout>

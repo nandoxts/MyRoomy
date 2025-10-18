@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="red">#FF3B30</color>
+    <color name="green">#34C759</color>
+
+    <color name="background_light">#F5F5F5</color>
+    <color name="purple_500">#6200EE</color>
+    <color name="purple_700">#3700B3</color>
+
+    <!-- Bordes y outline -->
+    <color name="md_theme_outline">#DBDBDB</color>
+
+    <!-- Colores para tarjetas y texto -->
+    <color name="colorBackgroundCard">#FFFFFF</color>
+    <color name="colorTextoPrimario">#212121</color>
+    <color name="colorTextoSecundario">#666666</color>
+
+    <!-- Precio, acciones -->
+    <color name="colorPrecio">#4CAF50</color>
+    <color name="colorDelete">#F44336</color>
+</resources>

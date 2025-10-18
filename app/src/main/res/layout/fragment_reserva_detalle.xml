@@ -1,0 +1,192 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"> <!-- Fondo general claro -->
+
+
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- Nombre -->
+            <TextView
+                android:id="@+id/txtNombreUsuarioDetalle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nombre Usuario"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Datos principales con iconos -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="4dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_room"
+                        android:layout_marginEnd="4dp"
+                        app:tint="@color/colorTextoSecundario" />
+
+                    <TextView
+                        android:id="@+id/txtHabitacionDetalle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Habitación - Precio"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorTextoSecundario"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="4dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_calendar"
+                        android:layout_marginEnd="4dp"
+                        app:tint="@color/colorTextoSecundario" />
+
+                    <TextView
+                        android:id="@+id/txtFechasDetalle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fecha Ingreso - Salida"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorTextoSecundario"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="4dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_people"
+                        android:layout_marginEnd="4dp"
+                        app:tint="@color/colorTextoSecundario" />
+
+                    <TextView
+                        android:id="@+id/txtPersonasDetalle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Personas"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorTextoSecundario"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_payment"
+                        android:layout_marginEnd="4dp"
+                        app:tint="@color/colorTextoSecundario" />
+
+                    <TextView
+                        android:id="@+id/txtMetodoPagoDetalle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Método de Pago"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorTextoSecundario"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Estado -->
+            <TextView
+                android:id="@+id/txtEstadoDetalle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Estado"
+                android:background="@drawable/bg_chip_default"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:textColor="@color/black"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Comentario -->
+            <TextView
+                android:id="@+id/txtComentarioDetalle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Comentario"
+                android:textSize="14sp"
+                android:textColor="@color/colorTextoSecundario"
+                android:padding="8dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Botones -->
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:weightSum="2"
+                android:layout_marginBottom="8dp">
+
+                <Button
+                    android:id="@+id/btnAceptarDetalle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Aceptar"
+                    android:backgroundTint="@color/colorPrecio"
+                    android:textColor="@android:color/white"
+                    android:drawableStart="@drawable/ic_check"
+                    android:drawablePadding="4dp"
+                    android:layout_marginEnd="4dp"/>
+
+                <Button
+                    android:id="@+id/btnRechazarDetalle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Rechazar"
+                    android:backgroundTint="#D50000"
+                    android:textColor="@android:color/white"
+                    android:drawableStart="@drawable/ic_close"
+                    android:drawablePadding="4dp"/>
+            </LinearLayout>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnCerrarDetalle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/cerrar"
+                android:background="@drawable/button_gradient"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:gravity="center"
+                android:layout_marginBottom="16dp"/>
+        </LinearLayout>
+
+</FrameLayout>

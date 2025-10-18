@@ -1,0 +1,46 @@
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardElevation="2dp"
+    android:layout_marginBottom="4dp"
+    app:cardCornerRadius="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/txtMisReservaHabitacion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Suite Ejecutiva"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtMisReservaFechas"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Del 2025-07-05 al 2025-07-07"
+            android:textSize="14sp"
+            android:layout_marginTop="2dp"/>
+
+        <!-- El chip visual del estado -->
+        <TextView
+            android:id="@+id/txtMisReservaEstado"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:text="Aprobada"
+            android:textSize="12sp"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
