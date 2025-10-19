@@ -2,14 +2,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--  Permisos generales -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Para Android 13 (API 33+) -->
+    <!--  Permisos de ubicación -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!--  Permisos multimedia (para tus fotos de perfil, etc.) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.INTERNET"/>
-
-    <!-- Para Android 12 o menor -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
     <application
@@ -23,23 +27,26 @@
         android:theme="@style/Theme.MyRoomy"
         tools:targetApi="31">
 
-        <!-- Pantalla principal -->
+        <!--  Clave API de Google Maps -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyD69eDGuw2DLihe5mS3i-FvvDeN4sJ_6-c" />
+
+        <!--  Actividad principal -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize"
-            >
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!--  Dashboard principal -->
         <activity
             android:name=".dashboard.activities.DashboardActivity"
             android:exported="false" />
-
-
 
     </application>
 </manifest>
