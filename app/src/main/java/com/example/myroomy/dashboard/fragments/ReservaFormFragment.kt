@@ -45,7 +45,7 @@ class ReservaFormFragment : Fragment() {
         binding.inputCantidadPersonas.setAdapter(cantidadAdapter)
 
         // Configurar MaterialAutoCompleteTextView: Método de pago
-        val metodoAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, listOf("Efectivo", "Tarjeta", "Yape/Plin"))
+        val metodoAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, listOf("Tarjeta (Culqi)", "Efectivo", "Yape/Plin"))
         binding.inputMetodoPago.setAdapter(metodoAdapter)
 
         // Configurar datepickers
@@ -62,7 +62,7 @@ class ReservaFormFragment : Fragment() {
         binding.inputFechaFin.setOnClickListener { dateListener(it) }
 
         binding.btnConfirmarReserva.setOnClickListener {
-            confirmarReserva()
+            procederConReserva()
         }
     }
 
@@ -84,7 +84,7 @@ class ReservaFormFragment : Fragment() {
         }
     }
 
-    private fun confirmarReserva() {
+    private fun procederConReserva() {
         val dni = binding.inputDNICliente.text.toString().trim()
         val fechaInicio = binding.inputFechaInicio.text.toString().trim()
         val fechaFin = binding.inputFechaFin.text.toString().trim()
@@ -106,6 +106,54 @@ class ReservaFormFragment : Fragment() {
             return
         }
 
+        // ✅ Verificar el método de pago seleccionado
+        when (metodoPago) {
+            "Tarjeta (Culqi)" -> {
+                // Ir al PagoFragment
+                irAPagoFragment(idUsuario, fechaInicio, fechaFin, cantidadPersonas, comentario, total)
+            }
+            else -> {
+                // Confirmar reserva directamente (Efectivo, Yape, etc.)
+                confirmarReservaSinPago(idUsuario, fechaInicio, fechaFin, cantidadPersonas, metodoPago, comentario, total)
+            }
+        }
+    }
+
+    private fun irAPagoFragment(
+        idUsuario: Int,
+        fechaInicio: String,
+        fechaFin: String,
+        cantidadPersonas: Int,
+        comentario: String,
+        total: Double
+    ) {
+        val pagoFragment = PagoFragment()
+        val bundle = Bundle().apply {
+            putInt("usuario_id", idUsuario)
+            putInt("habitacion_id", habitacionId)
+            putString("fecha_inicio", fechaInicio)
+            putString("fecha_fin", fechaFin)
+            putInt("cantidad_personas", cantidadPersonas)
+            putString("comentario", comentario)
+            putDouble("total", total)
+        }
+        pagoFragment.arguments = bundle
+
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(android.R.id.content, pagoFragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun confirmarReservaSinPago(
+        idUsuario: Int,
+        fechaInicio: String,
+        fechaFin: String,
+        cantidadPersonas: Int,
+        metodoPago: String,
+        comentario: String,
+        total: Double
+    ) {
         val fechaSolicitud = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
         val reserva = Reserva(
@@ -123,16 +171,13 @@ class ReservaFormFragment : Fragment() {
 
         val idReserva = reservaDAO.insertar(reserva)
         if (idReserva != -1L) {
-
             val habitacionDao = HabitacionDAO(requireContext())
             habitacionDao.actualizarEstado(habitacionId, "Reservada")
 
-            Toast.makeText(requireContext(), "Reserva enviada para aprobación", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "✅ Reserva registrada con éxito", Toast.LENGTH_SHORT).show()
             requireActivity().supportFragmentManager.popBackStack()
         } else {
-            Toast.makeText(requireContext(), "Error al registrar la reserva", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "❌ Error al registrar la reserva", Toast.LENGTH_SHORT).show()
         }
-
     }
-
 }
