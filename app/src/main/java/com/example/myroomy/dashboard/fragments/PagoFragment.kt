@@ -16,12 +16,13 @@ import com.example.myroomy.dashboard.models.Reserva
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
+import cn.pedant.SweetAlert.SweetAlertDialog
 
 class PagoFragment : Fragment() {
 
-    // 🔑 Reemplaza con tu clave pública de Culqi Sandbox
     private val PUBLIC_KEY = "pk_test_K9z4TGDS15roIg2H"
 
     private lateinit var edtCardNumber: EditText
@@ -31,7 +32,6 @@ class PagoFragment : Fragment() {
     private lateinit var edtEmail: EditText
     private lateinit var btnPagar: Button
     private lateinit var progressBar: ProgressBar
-    private lateinit var txtResultado: TextView
     private lateinit var txtMontoTotal: TextView
 
     // Datos de la reserva
@@ -68,10 +68,9 @@ class PagoFragment : Fragment() {
         edtEmail = view.findViewById(R.id.edtEmail)
         btnPagar = view.findViewById(R.id.btnPagar)
         progressBar = view.findViewById(R.id.progressBar)
-        txtResultado = view.findViewById(R.id.txtResultado)
         txtMontoTotal = view.findViewById(R.id.txtMontoTotal)
 
-        // Mostrar monto a pagar
+        // Mostrar monto total
         txtMontoTotal.text = "Total a pagar: S/ %.2f".format(total)
 
         btnPagar.setOnClickListener {
@@ -88,31 +87,48 @@ class PagoFragment : Fragment() {
         val expYear = edtYear.text.toString().trim()
         val email = edtEmail.text.toString().trim()
 
-        // Validaciones
-        if (cardNumber.isEmpty() || cvv.isEmpty() || expMonth.isEmpty() || expYear.isEmpty()) {
-            Toast.makeText(requireContext(), "⚠️ Completa todos los datos de la tarjeta", Toast.LENGTH_SHORT).show()
-            return
+        // ✅ Validaciones
+        when {
+            cardNumber.isEmpty() || cvv.isEmpty() || expMonth.isEmpty() ||
+                    expYear.isEmpty() || email.isEmpty() -> {
+                mostrarError("Por favor completa todos los campos obligatorios.")
+                return
+            }
+
+            cardNumber.length < 13 || cardNumber.length > 19 -> {
+                mostrarError("Número de tarjeta inválido.\nDebe tener entre 13 y 19 dígitos.")
+                return
+            }
+
+            cvv.length < 3 || cvv.length > 4 -> {
+                mostrarError("CVV inválido.\nDebe tener 3 o 4 dígitos.")
+                return
+            }
+
+            expMonth.toIntOrNull() == null || expMonth.toInt() !in 1..12 -> {
+                mostrarError("Mes inválido.\nDebe estar entre 01 y 12.")
+                return
+            }
+
+            expYear.toIntOrNull() == null || expYear.length != 4 || expYear.toInt() < Calendar.getInstance().get(Calendar.YEAR) -> {
+                mostrarError("Año inválido.\nDebe ser de 4 dígitos y no menor al año actual.")
+                return
+            }
+
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                mostrarError("Correo electrónico inválido.\nPor favor ingresa uno válido.")
+                return
+            }
         }
 
-        if (cardNumber.length < 13 || cardNumber.length > 19) {
-            Toast.makeText(requireContext(), "⚠️ Número de tarjeta inválido", Toast.LENGTH_SHORT).show()
-            return
-        }
+        // ✅ Mostrar alerta de carga
+        val loadingDialog = SweetAlertDialog(requireContext(), SweetAlertDialog.PROGRESS_TYPE)
+        loadingDialog.titleText = "Procesando pago..."
+        loadingDialog.setCancelable(false)
+        loadingDialog.show()
 
-        if (cvv.length < 3 || cvv.length > 4) {
-            Toast.makeText(requireContext(), "⚠️ CVV inválido", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(requireContext(), "⚠️ Ingresa un email válido", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        progressBar.visibility = View.VISIBLE
-        txtResultado.text = "⏳ Procesando pago..."
-        txtResultado.visibility = View.VISIBLE
         btnPagar.isEnabled = false
+        progressBar.visibility = View.VISIBLE
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -130,37 +146,107 @@ class PagoFragment : Fragment() {
                 )
 
                 withContext(Dispatchers.Main) {
+                    loadingDialog.dismissWithAnimation()
+
                     if (response.isSuccessful && response.body() != null) {
                         val tokenData = response.body()!!
                         val tokenId = tokenData.id
 
                         if (tokenId != null) {
-                            txtResultado.text = "✅ Token generado\nProcesando pago..."
-
-                            // ✅ CONFIRMAR RESERVA DESPUÉS DEL TOKEN
+                            mostrarExitoTemporal("Token generado correctamente.\nConfirmando reserva...")
                             confirmarReservaConPago(tokenId)
                         } else {
-                            progressBar.visibility = View.GONE
+                            mostrarError(tokenData.merchantMessage ?: "No se pudo crear el token.")
                             btnPagar.isEnabled = true
-                            txtResultado.text = "❌ Error: ${tokenData.merchantMessage ?: "No se pudo crear el token"}"
                         }
                     } else {
-                        progressBar.visibility = View.GONE
-                        btnPagar.isEnabled = true
-
                         val errorBody = response.errorBody()?.string()
-                        txtResultado.text = "❌ Error al procesar pago\n\nCódigo: ${response.code()}\n$errorBody"
+                        val errorMessage = parsearErrorCulqi(errorBody)
+                        mostrarError(errorMessage)
+                        btnPagar.isEnabled = true
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE
+                    loadingDialog.dismissWithAnimation()
+                    mostrarError("Error de conexión.\n${e.message}")
                     btnPagar.isEnabled = true
-                    txtResultado.text = "❌ Error de conexión:\n${e.message}"
-                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
+    }
+
+    private fun parsearErrorCulqi(errorBody: String?): String {
+        if (errorBody.isNullOrEmpty()) return "Error desconocido al procesar el pago."
+
+        return try {
+            val json = JSONObject(errorBody)
+            val userMessage = json.optString("user_message", "")
+            val merchantMessage = json.optString("merchant_message", "")
+            val code = json.optString("code", "")
+
+            when (code) {
+                "invalid_cvv" -> "CVV inválido.\nDebe tener 3 o 4 dígitos numéricos."
+                "invalid_expiration_year" -> "Año de expiración inválido.\nDebe ser de 4 dígitos y no menor al año actual."
+                "invalid_expiration_month" -> "Mes de expiración inválido.\nDebe estar entre 01 y 12."
+                "invalid_card_number" -> "Número de tarjeta inválido.\nVerifica los datos ingresados."
+                "card_lost" -> "Tarjeta reportada como perdida.\nContacta a tu banco."
+                "card_stolen" -> "Tarjeta reportada como robada.\nContacta a tu banco."
+                "insufficient_funds" -> "Fondos insuficientes.\nIntenta con otra tarjeta."
+                "issuer_not_available" -> "Banco no disponible.\nIntenta más tarde."
+                "issuer_decline_operation" -> "Operación rechazada por el banco."
+                else -> userMessage.ifEmpty { merchantMessage.ifEmpty { "Error al procesar el pago. Código: $code" } }
+            }
+        } catch (e: Exception) {
+            "Error al procesar el pago.\n$errorBody"
+        }
+    }
+
+    // ✅ Alerta de error
+    private fun mostrarError(mensaje: String) {
+        val dialog = SweetAlertDialog(requireContext(), SweetAlertDialog.ERROR_TYPE)
+        dialog.titleText = "Error"
+        dialog.contentText = mensaje
+        dialog.confirmText = "Entendido"
+        dialog.setConfirmClickListener { it.dismissWithAnimation() }
+
+        // Personalizar para modo oscuro
+        dialog.show()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+    }
+
+
+    private fun mostrarExito(mensaje: String) {
+        val dialog = SweetAlertDialog(requireContext(), SweetAlertDialog.SUCCESS_TYPE)
+        dialog.titleText = "Pago exitoso"
+        dialog.contentText = mensaje
+        dialog.confirmText = "Aceptar"
+        dialog.setConfirmClickListener {
+            it.dismissWithAnimation()
+
+            // Navegar al Fragment de Catálogo
+            val catalogoFragment = CatalogoFragment()
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.contenedor_main, catalogoFragment)
+                .commit()
+        }
+
+        // Personalizar para modo oscuro
+        dialog.show()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+    }
+
+    // ✅ Alerta de éxito temporal (para etapas intermedias)
+    private fun mostrarExitoTemporal(mensaje: String) {
+        val dialog = SweetAlertDialog(requireContext(), SweetAlertDialog.SUCCESS_TYPE)
+        dialog.titleText = "Éxito"
+        dialog.contentText = mensaje
+        dialog.confirmText = "OK"
+        dialog.setConfirmClickListener { it.dismissWithAnimation() }
+
+        // Personalizar para modo oscuro
+        dialog.show()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
     private fun confirmarReservaConPago(tokenId: String) {
@@ -172,7 +258,7 @@ class PagoFragment : Fragment() {
                     idUsuario = idUsuario,
                     idHabitacion = idHabitacion,
                     fechaSolicitud = fechaSolicitud,
-                    estado = "Confirmada", // ✅ Ya está pagado
+                    estado = "Confirmada",
                     comentario = "$comentario | Token: $tokenId",
                     fechaIngreso = fechaInicio,
                     fechaSalida = fechaFin,
@@ -186,31 +272,26 @@ class PagoFragment : Fragment() {
 
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
+                    btnPagar.isEnabled = true
 
                     if (idReserva != -1L) {
-                        // Actualizar estado de habitación
                         val habitacionDao = HabitacionDAO(requireContext())
                         habitacionDao.actualizarEstado(idHabitacion, "Reservada")
 
-                        txtResultado.text = "✅ ¡Pago exitoso!\n\nReserva confirmada\nID: $idReserva\nToken: $tokenId"
-
-                        Toast.makeText(requireContext(), "✅ Reserva confirmada con éxito", Toast.LENGTH_LONG).show()
-
-                        // Regresar después de 2 segundos
-                        view?.postDelayed({
-                            requireActivity().supportFragmentManager.popBackStack()
-                            requireActivity().supportFragmentManager.popBackStack()
-                        }, 2000)
+                        mostrarExito(
+                            "¡Pago exitoso!\nReserva confirmada con ID #$idReserva\nToken: $tokenId"
+                        )
                     } else {
-                        txtResultado.text = "⚠️ Pago procesado pero error al guardar reserva.\nToken: $tokenId"
-                        btnPagar.isEnabled = true
+                        mostrarError(
+                            "Pago procesado, pero ocurrió un error al guardar la reserva.\nToken: $tokenId\nPor favor contacta a soporte."
+                        )
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
                     btnPagar.isEnabled = true
-                    txtResultado.text = "❌ Error al confirmar reserva: ${e.message}"
+                    mostrarError("Error al confirmar reserva.\n${e.message}")
                 }
             }
         }

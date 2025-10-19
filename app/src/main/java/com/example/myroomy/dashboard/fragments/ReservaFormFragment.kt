@@ -16,6 +16,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import android.widget.ArrayAdapter
+import com.example.myroomy.R
 import com.example.myroomy.dashboard.database.HabitacionDAO
 
 class ReservaFormFragment : Fragment() {
@@ -139,8 +140,8 @@ class ReservaFormFragment : Fragment() {
         }
         pagoFragment.arguments = bundle
 
-        requireActivity().supportFragmentManager.beginTransaction()
-            .replace(android.R.id.content, pagoFragment)
+        parentFragmentManager.beginTransaction()  // ✅ Cambio aquí
+            .replace(R.id.contenedor_main, pagoFragment)  // ✅ Cambio aquí
             .addToBackStack(null)
             .commit()
     }
@@ -174,10 +175,10 @@ class ReservaFormFragment : Fragment() {
             val habitacionDao = HabitacionDAO(requireContext())
             habitacionDao.actualizarEstado(habitacionId, "Reservada")
 
-            Toast.makeText(requireContext(), "✅ Reserva registrada con éxito", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Reserva registrada con éxito", Toast.LENGTH_SHORT).show()
             requireActivity().supportFragmentManager.popBackStack()
         } else {
-            Toast.makeText(requireContext(), "❌ Error al registrar la reserva", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Error al registrar la reserva", Toast.LENGTH_SHORT).show()
         }
     }
 }

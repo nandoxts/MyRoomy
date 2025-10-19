@@ -5,13 +5,15 @@ import com.example.myroomy.data.models.CulqiTokenResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Header
+import retrofit2.http.Headers
 import retrofit2.http.POST
 
 interface CulqiService {
 
+    @Headers("Content-Type: application/json")
     @POST("v2/tokens")
     suspend fun createToken(
-        @Header("Authorization") authorization: String,
+        @Header("Authorization") authorization: String,  // Solo la clave, sin "Bearer"
         @Body request: CulqiTokenRequest
     ): Response<CulqiTokenResponse>
 }
