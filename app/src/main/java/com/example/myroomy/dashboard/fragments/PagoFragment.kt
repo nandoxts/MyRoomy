@@ -1,6 +1,7 @@
 package com.example.myroomy.dashboard.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,7 +24,9 @@ import cn.pedant.SweetAlert.SweetAlertDialog
 
 class PagoFragment : Fragment() {
 
-    private val PUBLIC_KEY = "pk_test_K9z4TGDS15roIg2H"
+    companion object {
+        private const val TAG = "PagoFragment"
+    }    private val PUBLIC_KEY = "pk_test_K9z4TGDS15roIg2H"
 
     private lateinit var edtCardNumber: EditText
     private lateinit var edtMonth: EditText
@@ -34,7 +37,8 @@ class PagoFragment : Fragment() {
     private lateinit var progressBar: ProgressBar
     private lateinit var txtMontoTotal: TextView
 
-    // Datos de la reserva
+    private var loadingDialog: SweetAlertDialog? = null
+    
     private var idUsuario: Int = -1
     private var idHabitacion: Int = -1
     private var fechaInicio: String = ""
@@ -81,17 +85,29 @@ class PagoFragment : Fragment() {
     }
 
     private fun crearToken() {
-        val cardNumber = edtCardNumber.text.toString().trim().replace(" ", "")
+        // LIMPIAR Y SANITIZAR COMPLETAMENTE
+        var cardNumber = edtCardNumber.text.toString().trim().replace(" ", "").replace("-", "")
         val cvv = edtCvv.text.toString().trim()
-        val expMonth = edtMonth.text.toString().trim()
+        val expMonth = edtMonth.text.toString().trim().padStart(2, '0')  // Asegurar 2 dígitos
         val expYear = edtYear.text.toString().trim()
-        val email = edtEmail.text.toString().trim()
+        val email = edtEmail.text.toString().trim().lowercase()  // Normalizar email
+        
+        Log.d(TAG, "INPUT RAW:")
+        Log.d(TAG, "Card Raw: '${edtCardNumber.text.toString()}'")
+        Log.d(TAG, "Card After Trim: '${edtCardNumber.text.toString().trim()}'")
+        Log.d(TAG, "Card After Clean: '$cardNumber'")
+        Log.d(TAG, "Card Bytes: ${cardNumber.toByteArray().joinToString(",") { it.toString() }}")
 
-        // ✅ Validaciones
+        // Validaciones
         when {
             cardNumber.isEmpty() || cvv.isEmpty() || expMonth.isEmpty() ||
                     expYear.isEmpty() || email.isEmpty() -> {
                 mostrarError("Por favor completa todos los campos obligatorios.")
+                return
+            }
+
+            !cardNumber.all { it.isDigit() } -> {
+                mostrarError("Número de tarjeta contiene caracteres no válidos.\nSolo se aceptan números.")
                 return
             }
 
@@ -100,8 +116,8 @@ class PagoFragment : Fragment() {
                 return
             }
 
-            cvv.length < 3 || cvv.length > 4 -> {
-                mostrarError("CVV inválido.\nDebe tener 3 o 4 dígitos.")
+            !cvv.all { it.isDigit() } || cvv.length < 3 || cvv.length > 4 -> {
+                mostrarError("CVV inválido.\nDebe tener 3 o 4 dígitos numéricos.")
                 return
             }
 
@@ -110,7 +126,7 @@ class PagoFragment : Fragment() {
                 return
             }
 
-            expYear.toIntOrNull() == null || expYear.length != 4 || expYear.toInt() < Calendar.getInstance().get(Calendar.YEAR) -> {
+            !expYear.all { it.isDigit() } || expYear.length != 4 || expYear.toInt() < Calendar.getInstance().get(Calendar.YEAR) -> {
                 mostrarError("Año inválido.\nDebe ser de 4 dígitos y no menor al año actual.")
                 return
             }
@@ -121,32 +137,60 @@ class PagoFragment : Fragment() {
             }
         }
 
-        // ✅ Mostrar alerta de carga
-        val loadingDialog = SweetAlertDialog(requireContext(), SweetAlertDialog.PROGRESS_TYPE)
-        loadingDialog.titleText = "Procesando pago..."
-        loadingDialog.setCancelable(false)
-        loadingDialog.show()
-
         btnPagar.isEnabled = false
-        progressBar.visibility = View.VISIBLE
 
         lifecycleScope.launch(Dispatchers.IO) {
+            // Mostrar alerta de carga (evitar duplicados)
+            withContext(Dispatchers.Main) {
+                if (loadingDialog?.isShowing != true) {
+                    loadingDialog = SweetAlertDialog(requireContext(), SweetAlertDialog.PROGRESS_TYPE)
+                    loadingDialog?.titleText = "Procesando pago..."
+                    loadingDialog?.contentText = "Conectando con Culqi..."
+                    loadingDialog?.setCancelable(false)
+                    loadingDialog?.show()
+                }
+            }
+            
             try {
+                // Asegurar que el número de tarjeta esté limpio
+                val cleanCardNumber = cardNumber.trim()
+                
+                Log.d(TAG, "DATOS ENVIADOS A CULQI:")
+                Log.d(TAG, "Card: ${cleanCardNumber.take(6)}...${cleanCardNumber.takeLast(4)}")
+                Log.d(TAG, "Exp: $expMonth/$expYear")
+                Log.d(TAG, "Email: $email")
+                Log.d(TAG, "Card Length: ${cleanCardNumber.length}")
+                Log.d(TAG, "Card is numeric: ${cleanCardNumber.all { it.isDigit() }}")
+                Log.d(TAG, "API Key: ${PUBLIC_KEY.take(7)}...${PUBLIC_KEY.takeLast(4)}")
+                
+                // Crear header de autorización Bearer
+                val authHeader = "Bearer $PUBLIC_KEY"  // Formato correcto de Culqi
+                Log.d(TAG, "Auth Header: Bearer [clave]")
+                
                 val request = CulqiTokenRequest(
-                    cardNumber = cardNumber,
+                    cardNumber = cleanCardNumber,
                     cvv = cvv,
                     expirationMonth = expMonth,
                     expirationYear = expYear,
                     email = email
                 )
+                
+                Log.d(TAG, "REQUEST A CULQI:")
+                Log.d(TAG, "Card: '$cleanCardNumber' (length: ${cleanCardNumber.length})")
+                Log.d(TAG, "Card HEX: ${cleanCardNumber.toByteArray().joinToString(",") { it.toString() }}")
+                Log.d(TAG, "CVV: '$cvv'")
+                Log.d(TAG, "Month: '$expMonth'")
+                Log.d(TAG, "Year: '$expYear'")
+                Log.d(TAG, "Email: '$email'")
 
                 val response = RetrofitClient.culqiService.createToken(
-                    authorization = "Bearer $PUBLIC_KEY",
+                    authorization = authHeader,  // HTTP Basic Auth: "Basic base64(clave:)"
                     request = request
                 )
 
                 withContext(Dispatchers.Main) {
-                    loadingDialog.dismissWithAnimation()
+                    loadingDialog?.dismissWithAnimation()
+                    loadingDialog = null
 
                     if (response.isSuccessful && response.body() != null) {
                         val tokenData = response.body()!!
@@ -168,7 +212,8 @@ class PagoFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    loadingDialog.dismissWithAnimation()
+                    loadingDialog?.dismissWithAnimation()
+                    loadingDialog = null
                     mostrarError("Error de conexión.\n${e.message}")
                     btnPagar.isEnabled = true
                 }
@@ -202,33 +247,21 @@ class PagoFragment : Fragment() {
         }
     }
 
-    // ✅ Alerta de error
-    private fun mostrarError(mensaje: String) {
-        val dialog = SweetAlertDialog(requireContext(), SweetAlertDialog.ERROR_TYPE)
-        dialog.titleText = "Error"
-        dialog.contentText = mensaje
-        dialog.confirmText = "Entendido"
-        dialog.setConfirmClickListener { it.dismissWithAnimation() }
-
-        // Personalizar para modo oscuro
-        dialog.show()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-    }
-
-
+    // Alerta de error
     private fun mostrarExito(mensaje: String) {
         val dialog = SweetAlertDialog(requireContext(), SweetAlertDialog.SUCCESS_TYPE)
-        dialog.titleText = "Pago exitoso"
+        dialog.titleText = "Pago Exitoso!"
         dialog.contentText = mensaje
-        dialog.confirmText = "Aceptar"
+        dialog.confirmText = "Ir al inicio"
         dialog.setConfirmClickListener {
             it.dismissWithAnimation()
+            loadingDialog = null  // Limpiar
 
             // Navegar al Fragment de Catálogo
             val catalogoFragment = CatalogoFragment()
             parentFragmentManager.beginTransaction()
                 .replace(R.id.contenedor_main, catalogoFragment)
-                .commit()
+                .commitNow()
         }
 
         // Personalizar para modo oscuro
@@ -236,10 +269,25 @@ class PagoFragment : Fragment() {
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
-    // ✅ Alerta de éxito temporal (para etapas intermedias)
+    private fun mostrarError(mensaje: String) {
+        val dialog = SweetAlertDialog(requireContext(), SweetAlertDialog.ERROR_TYPE)
+        dialog.titleText = "Error"
+        dialog.contentText = mensaje
+        dialog.confirmText = "Reintentar"
+        dialog.setConfirmClickListener {
+            it.dismissWithAnimation()
+            loadingDialog = null
+            btnPagar.isEnabled = true
+        }
+
+        // Personalizar para modo oscuro
+        dialog.show()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+    }
+
     private fun mostrarExitoTemporal(mensaje: String) {
         val dialog = SweetAlertDialog(requireContext(), SweetAlertDialog.SUCCESS_TYPE)
-        dialog.titleText = "Éxito"
+        dialog.titleText = "Confirmando..."
         dialog.contentText = mensaje
         dialog.confirmText = "OK"
         dialog.setConfirmClickListener { it.dismissWithAnimation() }
@@ -271,7 +319,6 @@ class PagoFragment : Fragment() {
                 val idReserva = reservaDAO.insertar(reserva)
 
                 withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE
                     btnPagar.isEnabled = true
 
                     if (idReserva != -1L) {
@@ -279,7 +326,7 @@ class PagoFragment : Fragment() {
                         habitacionDao.actualizarEstado(idHabitacion, "Reservada")
 
                         mostrarExito(
-                            "¡Pago exitoso!\nReserva confirmada con ID #$idReserva\nToken: $tokenId"
+                            "Reserva confirmada!\nID: #$idReserva\nEdificio actualizado.\nProximas confirmaciones via email."
                         )
                     } else {
                         mostrarError(
@@ -289,7 +336,6 @@ class PagoFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    progressBar.visibility = View.GONE
                     btnPagar.isEnabled = true
                     mostrarError("Error al confirmar reserva.\n${e.message}")
                 }

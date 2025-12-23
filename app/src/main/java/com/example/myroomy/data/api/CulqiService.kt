@@ -13,7 +13,7 @@ interface CulqiService {
     @Headers("Content-Type: application/json")
     @POST("v2/tokens")
     suspend fun createToken(
-        @Header("Authorization") authorization: String,  // Solo la clave, sin "Bearer"
+        @Header("Authorization") authorization: String,  // Bearer: "Bearer pk_test_xxx"
         @Body request: CulqiTokenRequest
     ): Response<CulqiTokenResponse>
 }
