@@ -8,9 +8,15 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.myroomy.BuildConfig
 import com.example.myroomy.R
 import com.example.myroomy.data.api.RetrofitClient
+import com.example.myroomy.data.api.SendGridClient
 import com.example.myroomy.data.models.CulqiTokenRequest
+import com.example.myroomy.data.models.Content
+import com.example.myroomy.data.models.EmailAddress
+import com.example.myroomy.data.models.Personalization
+import com.example.myroomy.data.models.SendGridEmailRequest
 import com.example.myroomy.dashboard.database.HabitacionDAO
 import com.example.myroomy.dashboard.database.ReservaDAO
 import com.example.myroomy.dashboard.models.Reserva
@@ -26,7 +32,9 @@ class PagoFragment : Fragment() {
 
     companion object {
         private const val TAG = "PagoFragment"
-    }    private val PUBLIC_KEY = "pk_test_K9z4TGDS15roIg2H"
+    }
+
+    private lateinit var apiKey: String
 
     private lateinit var edtCardNumber: EditText
     private lateinit var edtMonth: EditText
@@ -52,6 +60,9 @@ class PagoFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_pago, container, false)
+
+        // Cargar API Key desde BuildConfig (inyectada desde local.properties)
+        apiKey = BuildConfig.CULQI_PUBLIC_KEY
 
         // Recibir datos de la reserva
         arguments?.let {
@@ -91,12 +102,6 @@ class PagoFragment : Fragment() {
         val expMonth = edtMonth.text.toString().trim().padStart(2, '0')  // Asegurar 2 dígitos
         val expYear = edtYear.text.toString().trim()
         val email = edtEmail.text.toString().trim().lowercase()  // Normalizar email
-        
-        Log.d(TAG, "INPUT RAW:")
-        Log.d(TAG, "Card Raw: '${edtCardNumber.text.toString()}'")
-        Log.d(TAG, "Card After Trim: '${edtCardNumber.text.toString().trim()}'")
-        Log.d(TAG, "Card After Clean: '$cardNumber'")
-        Log.d(TAG, "Card Bytes: ${cardNumber.toByteArray().joinToString(",") { it.toString() }}")
 
         // Validaciones
         when {
@@ -129,6 +134,24 @@ class PagoFragment : Fragment() {
             !expYear.all { it.isDigit() } || expYear.length != 4 || expYear.toInt() < Calendar.getInstance().get(Calendar.YEAR) -> {
                 mostrarError("Año inválido.\nDebe ser de 4 dígitos y no menor al año actual.")
                 return
+            }
+
+            // Validar que la tarjeta no esté vencida (mes/año)
+            {
+                val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+                val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
+                val cardYear = expYear.toInt()
+                val cardMonth = expMonth.toInt()
+                
+                if (cardYear == currentYear && cardMonth < currentMonth) {
+                    mostrarError("Tarjeta vencida.\nVerifica el mes y año de expiración.")
+                    return
+                }
+                
+                if (cardYear > currentYear + 20) {
+                    mostrarError("Año de expiración fuera de rango.\nVerifica que sea correcto.")
+                    return
+                }
             }
 
             !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
@@ -325,13 +348,409 @@ class PagoFragment : Fragment() {
                         val habitacionDao = HabitacionDAO(requireContext())
                         habitacionDao.actualizarEstado(idHabitacion, "Reservada")
 
+                        // Enviar email de confirmación de forma asíncrona (no bloquear UI)
+                        enviarEmailConfirmacion(
+                            email = edtEmail.text.toString().trim(),
+                            idReserva = idReserva.toString()
+                        )
+
                         mostrarExito(
-                            "Reserva confirmada!\nID: #$idReserva\nEdificio actualizado.\nProximas confirmaciones via email."
+                            "Tu reserva está confirmada\nID: #$idReserva\nRevisa tu email para detalles"
                         )
                     } else {
                         mostrarError(
                             "Pago procesado, pero ocurrió un error al guardar la reserva.\nToken: $tokenId\nPor favor contacta a soporte."
                         )
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    btnPagar.isEnabled = true
+                    mostrarError("Error al confirmar reserva.\n${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun enviarEmailConfirmacion(email: String, idReserva: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val apiKey = BuildConfig.SENDGRID_API_KEY
+                val fromEmail = BuildConfig.SENDGRID_FROM_EMAIL
+                val fromName = BuildConfig.SENDGRID_FROM_NAME
+
+                // Obtener nombre de habitación desde base de datos
+                val habitacionDao = HabitacionDAO(requireContext())
+                val habitacion = habitacionDao.obtenerPorId(idHabitacion)
+                val nombreHabitacion = habitacion?.nombre ?: "Habitación $idHabitacion"
+
+                val htmlContent = construirHtmlConfirmacion(
+                    nombreHabitacion = nombreHabitacion,
+                    idReserva = idReserva,
+                    fechaCheckIn = fechaInicio,
+                    fechaCheckOut = fechaFin,
+                    montoTotal = String.format("%.2f", total)
+                )
+
+                val request = SendGridEmailRequest(
+                    personalizations = listOf(
+                        Personalization(
+                            to = listOf(EmailAddress(email = email)),
+                            subject = "Confirmación de Reserva - My Roomy"
+                        )
+                    ),
+                    from = EmailAddress(email = fromEmail, name = fromName),
+                    subject = "Confirmación de Reserva - My Roomy",
+                    content = listOf(
+                        Content(type = "text/html", value = htmlContent)
+                    )
+                )
+
+                val authHeader = "Bearer $apiKey"
+                val response = SendGridClient.sendGridService.sendEmail(authHeader, request)
+
+                if (response.isSuccessful) {
+                    Log.d("SendGrid", "Email enviado exitosamente a $email")
+                } else {
+                    Log.e("SendGrid", "Error enviando email: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("SendGrid", "Excepción al enviar email: ${e.message}")
+            }
+        }
+    }
+
+    private fun construirHtmlConfirmacion(
+        nombreHabitacion: String,
+        idReserva: String,
+        fechaCheckIn: String,
+        fechaCheckOut: String,
+        montoTotal: String
+    ): String {
+        return """
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Confirmación de Reserva - My Roomy</title>
+                <style>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        padding: 20px;
+                        color: #333;
+                    }
+                    
+                    .container {
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background: white;
+                        border-radius: 12px;
+                        overflow: hidden;
+                        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+                    }
+                    
+                    .header {
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 40px 30px;
+                        text-align: center;
+                    }
+                    
+                    .header h1 {
+                        font-size: 28px;
+                        font-weight: 700;
+                        margin-bottom: 8px;
+                    }
+                    
+                    .header p {
+                        font-size: 14px;
+                        opacity: 0.95;
+                        font-weight: 300;
+                    }
+                    
+                    .check-icon {
+                        display: inline-block;
+                        width: 60px;
+                        height: 60px;
+                        background: rgba(255, 255, 255, 0.2);
+                        border-radius: 50%;
+                        margin-bottom: 15px;
+                        font-size: 30px;
+                        line-height: 60px;
+                    }
+                    
+                    .content {
+                        padding: 40px 30px;
+                    }
+                    
+                    .welcome-text {
+                        font-size: 16px;
+                        color: #555;
+                        margin-bottom: 30px;
+                        line-height: 1.6;
+                    }
+                    
+                    .reservation-info {
+                        background: #f8f9ff;
+                        border-left: 4px solid #667eea;
+                        padding: 20px;
+                        border-radius: 8px;
+                        margin-bottom: 30px;
+                    }
+                    
+                    .info-row {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 12px 0;
+                        border-bottom: 1px solid #e0e0ff;
+                    }
+                    
+                    .info-row:last-child {
+                        border-bottom: none;
+                    }
+                    
+                    .info-label {
+                        font-weight: 600;
+                        color: #667eea;
+                        font-size: 13px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    
+                    .info-value {
+                        color: #333;
+                        font-size: 15px;
+                        font-weight: 500;
+                    }
+                    
+                    .divider {
+                        height: 1px;
+                        background: linear-gradient(90deg, transparent, #ddd, transparent);
+                        margin: 30px 0;
+                    }
+                    
+                    .payment-section {
+                        text-align: center;
+                        padding: 20px;
+                        background: linear-gradient(135deg, #f5f7ff 0%, #f0f4ff 100%);
+                        border-radius: 10px;
+                        margin-bottom: 30px;
+                    }
+                    
+                    .payment-label {
+                        font-size: 12px;
+                        color: #888;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        margin-bottom: 10px;
+                    }
+                    
+                    .payment-amount {
+                        font-size: 38px;
+                        font-weight: 700;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                    }
+                    
+                    .booking-reference {
+                        background: #f0f4ff;
+                        padding: 15px;
+                        border-radius: 8px;
+                        margin-bottom: 25px;
+                        text-align: center;
+                    }
+                    
+                    .reference-label {
+                        font-size: 11px;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        display: block;
+                        margin-bottom: 5px;
+                    }
+                    
+                    .reference-code {
+                        font-size: 20px;
+                        font-weight: 700;
+                        color: #667eea;
+                        font-family: 'Courier New', monospace;
+                        letter-spacing: 2px;
+                    }
+                    
+                    .footer-message {
+                        background: #f9f9f9;
+                        padding: 20px;
+                        border-radius: 8px;
+                        margin-bottom: 25px;
+                        border-left: 4px solid #764ba2;
+                    }
+                    
+                    .footer-message p {
+                        font-size: 13px;
+                        color: #666;
+                        line-height: 1.6;
+                        margin: 0;
+                    }
+                    
+                    .cta-button {
+                        display: inline-block;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 14px 40px;
+                        text-decoration: none;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        font-size: 14px;
+                        margin-bottom: 30px;
+                        transition: transform 0.2s;
+                    }
+                    
+                    .cta-button:hover {
+                        text-decoration: none;
+                        color: white;
+                    }
+                    
+                    .footer {
+                        background: #f5f5f5;
+                        padding: 25px 30px;
+                        text-align: center;
+                        border-top: 1px solid #e5e5e5;
+                    }
+                    
+                    .footer-text {
+                        font-size: 12px;
+                        color: #999;
+                        line-height: 1.8;
+                        margin: 0;
+                    }
+                    
+                    .social-icons {
+                        margin-top: 15px;
+                        font-size: 14px;
+                    }
+                    
+                    .social-icons a {
+                        color: #667eea;
+                        text-decoration: none;
+                        margin: 0 10px;
+                        font-weight: 600;
+                    }
+                    
+                    @media only screen and (max-width: 600px) {
+                        .container {
+                            border-radius: 0;
+                        }
+                        
+                        .header {
+                            padding: 30px 20px;
+                        }
+                        
+                        .header h1 {
+                            font-size: 24px;
+                        }
+                        
+                        .content {
+                            padding: 25px 20px;
+                        }
+                        
+                        .payment-amount {
+                            font-size: 32px;
+                        }
+                        
+                        .info-row {
+                            flex-direction: column;
+                            align-items: flex-start;
+                        }
+                        
+                        .info-value {
+                            margin-top: 5px;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <!-- Header -->
+                    <div class="header">
+                        <div class="check-icon">✓</div>
+                        <h1>Confirmación de Reserva</h1>
+                        <p>Tu hogar temporal te espera</p>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="content">
+                        <p class="welcome-text">
+                            ¡Excelente! Tu reserva ha sido confirmada exitosamente. Estamos entusiasmados de recibirte en My Roomy. A continuación encontrarás los detalles de tu hospedaje.
+                        </p>
+                        
+                        <!-- Booking Reference -->
+                        <div class="booking-reference">
+                            <span class="reference-label">Número de Reserva</span>
+                            <span class="reference-code">#$idReserva</span>
+                        </div>
+                        
+                        <!-- Reservation Details -->
+                        <div class="reservation-info">
+                            <div class="info-row">
+                                <span class="info-label">🏠 Habitación</span>
+                                <span class="info-value">$nombreHabitacion</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">📅 Check-in</span>
+                                <span class="info-value">$fechaCheckIn</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">📅 Check-out</span>
+                                <span class="info-value">$fechaCheckOut</span>
+                            </div>
+                        </div>
+                        
+                        <div class="divider"></div>
+                        
+                        <!-- Payment Section -->
+                        <div class="payment-section">
+                            <p class="payment-label">Monto Pagado</p>
+                            <p class="payment-amount">S/ $montoTotal</p>
+                        </div>
+                        
+                        <!-- Support Message -->
+                        <div class="footer-message">
+                            <p><strong>¿Necesitas ayuda?</strong> Si tienes preguntas sobre tu reserva, cambios o necesitas asistencia, nuestro equipo está disponible a través de la app para atenderte.</p>
+                        </div>
+                        
+                        <center>
+                            <a href="https://myroomy.app/reservas" class="cta-button">Ver mis Reservas</a>
+                        </center>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="footer">
+                        <p class="footer-text">
+                            <strong>My Roomy</strong><br>
+                            Tu plataforma de hospedaje confiable<br>
+                            © 2024-2025. Todos los derechos reservados.
+                        </p>
+                        <div class="social-icons">
+                            <a href="#">Centro de Ayuda</a> | 
+                            <a href="#">Contacto</a>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
+    }
                     }
                 }
             } catch (e: Exception) {

@@ -16,6 +16,18 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Leer claves desde local.properties
+        val localProperties = java.util.Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        
+        buildConfigField("String", "CULQI_PUBLIC_KEY", "\"${localProperties.getProperty("culqi.public.key", "pk_test_placeholder")}\"")
+        buildConfigField("String", "SENDGRID_API_KEY", "\"${localProperties.getProperty("sendgrid.api.key", "SG.placeholder")}\"")
+        buildConfigField("String", "SENDGRID_FROM_EMAIL", "\"${localProperties.getProperty("sendgrid.from.email", "noreply@example.com")}\"")
+        buildConfigField("String", "SENDGRID_FROM_NAME", "\"${localProperties.getProperty("sendgrid.from.name", "My Roomy")}\"")
     }
 
     buildTypes {
